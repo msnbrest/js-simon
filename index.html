@@ -1,0 +1,102 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simon</title>
+<style>
+body{background:#222;margin:auto;}
+div{position:relative}
+.page{margin:auto;width:2em;background:#000;text-align:center;}
+.flex{display:flex;flex-flow:row wrap}
+.bt{width:1em;height:1em;overflow:hidden;cursor:pointer;user-select:none;}
+.bt .txt{font-size:.86em;color:#0003;}
+.bt:hover{box-shadow:0 0 0 .1em #fff7 inset;}
+#bt0{background:#f33;}
+#bt1{background:#0d0;}
+#bt2{background:#05f;}
+#bt3{background:#dd0;}
+</style><script>
+
+// 1em == 16px
+
+let screen= {},   audios= [],   robo= [],   cur= -1,   wait= 1000,   gn= Date.now(),   ga= gn;
+
+
+
+const _sel= val=> document.querySelector(val),
+
+
+init= _=>{
+	["son0.ogg","son1.ogg","son2.ogg","son3.ogg","fail.ogg"].forEach( (vv,kk)=>{
+		audios[kk]= document.createElement('audio');   audios[kk].src= vv;
+	});
+	[0,1,2,3].forEach( kk=>{
+		_sel("#bt"+kk).onclick= _=>{ next_or_loose(kk); };
+		_sel('#bt'+kk).style.opacity= 0.3;
+	});
+	resiz();
+	draw();
+},
+
+
+
+shutdown= kk=>{ audios[kk].paused && _sel('#bt'+kk).style.opacity==1 &&( _sel('#bt'+kk).style.opacity= 0.3 ); },
+
+
+draw= _=>{
+	gn= Date.now();
+
+	shutdown( 0 );
+	shutdown( 1 );
+	shutdown( 2 );
+	shutdown( 3 );
+	wait<0?( cur<0 &&( choix= Math.random()*4|0, robo.push(choix), sound(choix), cur= 0 ) ): wait-= gn-ga;
+
+	ga= gn;
+	requestAnimationFrame(draw);
+},
+
+
+sound= kk=>{   _sel('#bt'+kk) &&( _sel('#bt'+kk).style.opacity= 1, _audio(kk) );   },
+
+
+_audio= kk=>{ audios[kk].currentTime= 0, audios[kk].play() },
+
+
+next_or_loose= qui=>{
+
+	if( qui==4 ){ return; }
+	if( robo[cur]==qui ){
+		cur+1 < robo.length? cur++:( cur= -1, wait= 1000 );
+		sound(qui);
+		return;
+	}
+	robo= [];
+	cur= -1;
+	wait= 1000;
+	_audio(4);
+},
+
+
+resiz= _=>{
+	screen.w= window.innerWidth/32;
+	screen.h= window.innerHeight/32;
+	screen.m= screen.w<screen.h? screen.w: screen.h;
+	_sel("body").style.fontSize= screen.m+"em";
+},
+
+
+kd= e=>{ next_or_loose( cur<0? 4: e.keyCode== 97? 2: e.keyCode== 99? 3: e.keyCode== 103? 0: e.keyCode== 105? 1: 4 ); };
+
+
+
+window.addEventListener("keydown",kd,false);
+window.addEventListener("load",init,false);
+window.addEventListener("resize",resiz,false);
+
+</script></head><body>
+<div class="page flex">
+<div id="bt0" class="bt"><div class="txt">7</div></div>
+<div id="bt1" class="bt"><div class="txt">9</div></div>
+<div id="bt2" class="bt"><div class="txt">1</div></div>
+<div id="bt3" class="bt"><div class="txt">3</div></div>
+</div>
+</body></html>
