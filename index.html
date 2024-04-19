@@ -4,6 +4,8 @@
 <style>
 body{background:#222;margin:auto;}
 div{position:relative}
+header{position:absolute;left:0;top:0;width:100%;text-align:center;z-index:6;user-select:none;color:#ccc;}
+
 .page{margin:auto;width:2em;background:#000;text-align:center;}
 .flex{display:flex;flex-flow:row wrap}
 .bt{width:1em;height:1em;overflow:hidden;cursor:pointer;user-select:none;}
@@ -17,11 +19,12 @@ div{position:relative}
 
 // 1em == 16px
 
-let screen= {},   audios= [],   robo= [],   cur= -1,   wait= 1000,   gn= Date.now(),   ga= gn;
+let screen= {},   audios= [],   robo= [],   cur= -1,   wait= 1000,   gn= Date.now(),   ga= gn,   score= { now:0, max:0 };
 
 
 
 const _sel= val=> document.querySelector(val),
+
 
 
 init= _=>{
@@ -34,11 +37,20 @@ init= _=>{
 	});
 	resiz();
 	draw();
+	update_score();
+},
+
+
+
+update_score= _=>{
+
+	_sel("header").innerHTML= "score: "+ score.now +", max: "+ score.max;
 },
 
 
 
 shutdown= kk=>{ audios[kk].paused && _sel('#bt'+kk).style.opacity==1 &&( _sel('#bt'+kk).style.opacity= 0.3 ); },
+
 
 
 draw= _=>{
@@ -55,20 +67,30 @@ draw= _=>{
 },
 
 
+
 sound= kk=>{   _sel('#bt'+kk) &&( _sel('#bt'+kk).style.opacity= 1, _audio(kk) );   },
+
 
 
 _audio= kk=>{ audios[kk].currentTime= 0, audios[kk].play() },
 
 
-next_or_loose= qui=>{
 
-	if( qui==4 ){ return; }
-	if( robo[cur]==qui ){
-		cur+1 < robo.length? cur++:( cur= -1, wait= 1000 );
-		sound(qui);
-		return;
-	}
+good= _=>{
+
+	cur= -1;
+	wait= 1000;
+	score.now++;
+	update_score();
+},
+
+
+
+fail= _=>{
+
+	score.now>score.max &&( score.max= score.now );
+	score.now= 0;
+	update_score();
 	robo= [];
 	cur= -1;
 	wait= 1000;
@@ -76,12 +98,28 @@ next_or_loose= qui=>{
 },
 
 
+
+next_or_loose= qui=>{
+
+	if( qui==4 ){ return; }
+
+	if( robo[cur]==qui ){
+		cur+1 < robo.length? cur++:( good() );
+		sound(qui);
+		return;
+	}
+	fail();
+},
+
+
+
 resiz= _=>{
 	screen.w= window.innerWidth/32;
 	screen.h= window.innerHeight/32;
 	screen.m= screen.w<screen.h? screen.w: screen.h;
-	_sel("body").style.fontSize= screen.m+"em";
+	_sel("main").style.fontSize= screen.m+"em";
 },
+
 
 
 kd= e=>{ next_or_loose( cur<0? 4: e.keyCode== 97? 2: e.keyCode== 99? 3: e.keyCode== 103? 0: e.keyCode== 105? 1: 4 ); };
@@ -93,10 +131,14 @@ window.addEventListener("load",init,false);
 window.addEventListener("resize",resiz,false);
 
 </script></head><body>
-<div class="page flex">
+
+<header></header>
+
+<main class="page flex">
 <div id="bt0" class="bt"><div class="txt">7</div></div>
 <div id="bt1" class="bt"><div class="txt">9</div></div>
 <div id="bt2" class="bt"><div class="txt">1</div></div>
 <div id="bt3" class="bt"><div class="txt">3</div></div>
-</div>
+</main>
+
 </body></html>
